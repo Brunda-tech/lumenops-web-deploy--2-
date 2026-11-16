@@ -1,0 +1,6 @@
+{
+  "name": "LumenOps",
+  "description": "An intelligent outage and complaint operations platform for BESCOM — Power Hack 2026.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
