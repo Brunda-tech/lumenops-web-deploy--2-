@@ -57,6 +57,17 @@
   margin: 12px 14px;
 }
 
+.leaflet-tooltip.map-location-label {
+  padding: 3px 7px;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #0F172A;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.16);
+}
+
 /* Tactile 3D perspective card lift (compositor-only, <= 200ms) */
 .card-3d-lift {
   transition:

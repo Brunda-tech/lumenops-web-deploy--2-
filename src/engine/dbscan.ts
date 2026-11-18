@@ -768,14 +768,10 @@ export function runDbscanAndScore(
     const circle: BescomCircle = feederInfo?.circle ?? 'Bengaluru East';
 
     const override = statusOverrides[stableKey];
-    const defaultStatus: IncidentStatus =
-      priority === 'HIGH' && override === undefined ? 'Crew assigned' : 'Reported';
+    const defaultStatus: IncidentStatus = 'Reported';
     const status = override?.status ?? defaultStatus;
-    const assignedCrewId =
-      override?.assignedCrewId ?? (status === 'Crew assigned' ? 'CREW-14' : undefined);
-    const assignedCrewName =
-      override?.assignedCrewName ??
-      (status === 'Crew assigned' ? 'Rapid Response #14' : undefined);
+    const assignedCrewId = override?.assignedCrewId;
+    const assignedCrewName = override?.assignedCrewName;
     const estimatedRestoration =
       override?.estimatedRestoration ??
       (status === 'Restored'
@@ -900,41 +896,6 @@ export function formatDuration(minutes: number): string {
   const rem = minutes % 60;
   if (rem === 0) return hrs === 1 ? '1 hr' : `${hrs} hrs`;
   return `${hrs}h ${rem}m`;
-}
-
-export function generateMonsoonSurgeBatch(): OutageReport[] {
-  const surge: OutageReport[] = [];
-  const stamp = Date.now();
-  const targets = [
-    { feeder: BESCOM_FEEDERS[1], count: 7, duration: 95, type: 'Transformer Fault' as OutageType }, // Whitefield
-    { feeder: BESCOM_FEEDERS[6], count: 5, duration: 55, type: 'Complete Blackout' as OutageType }, // Jayanagar
-    { feeder: BESCOM_FEEDERS[15], count: 3, duration: 40, type: 'Line / Pole Damage' as OutageType }, // Vijayanagar
-    { feeder: BESCOM_FEEDERS[19], count: 3, duration: 35, type: 'Complete Blackout' as OutageType }, // Devanahalli
-  ];
-
-  const channels: ReportChannel[] = ['Helpline 1912', 'Mobile App', 'Social Media'];
-  let idx = 0;
-  for (const t of targets) {
-    for (let i = 0; i < t.count; i++) {
-      idx++;
-      surge.push({
-        id: `SURGE-${stamp}-${idx}`,
-        rrNumber: `BLR-MG-${64000 + idx}`,
-        consumerName: `Citizen #${5000 + idx}`,
-        phone: `+91 99800 ${String(70000 + idx).slice(-5)}`,
-        area: t.feeder.area,
-        feederId: t.feeder.feederId,
-        lat: t.feeder.lat + seededOffset(idx * 17, 0.0028),
-        lng: t.feeder.lng + seededOffset(idx * 31, 0.0028),
-        channel: channels[idx % 3],
-        outageType: t.type,
-        reportedAtMinutesAgo: t.duration - i * 3,
-        criticalLoad: i % 2 === 0 ? t.feeder.defaultCriticalLoad : 'None',
-        description: 'Storm-induced feeder trip reported during monsoon surge simulation',
-      });
-    }
-  }
-  return surge;
 }
 
 export function parseCsvReports(csvText: string): OutageReport[] {

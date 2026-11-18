@@ -7,23 +7,28 @@ import type { Language, WorkspaceView } from '../types/lumenops';
 interface HeaderProps {
   activeView: WorkspaceView;
   lang: Language;
+  isAdmin: boolean;
   onSelectView: (view: WorkspaceView) => void;
 }
 
 export default function Header({
   activeView,
   lang,
+  isAdmin,
   onSelectView,
 }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const t = TRANSLATIONS[lang].nav;
 
-  const navItems: Array<{ id: WorkspaceView; label: string }> = [
+  const allNavItems: Array<{ id: WorkspaceView; label: string }> = [
     { id: 'operations', label: t.operations },
     { id: 'citizen', label: t.citizen },
     { id: 'crews', label: t.crews },
     { id: 'analytics', label: t.analytics },
   ];
+  const navItems = allNavItems.filter(
+    (item) => isAdmin || (item.id !== 'crews' && item.id !== 'analytics')
+  );
 
   const handleSelect = (view: WorkspaceView) => {
     onSelectView(view);

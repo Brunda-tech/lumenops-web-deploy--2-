@@ -187,6 +187,7 @@ export interface NewConnectionApplication {
   loadKw: number;
   phase: 'Single Phase' | 'Three Phase';
   proofDocument: string;
+  uploadedDocumentName?: string;
   estimatedFee: number;
   status: ConnectionStatus;
   submittedAt: string;

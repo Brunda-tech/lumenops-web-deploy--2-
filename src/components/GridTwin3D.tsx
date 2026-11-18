@@ -5,6 +5,7 @@ import {
   Compass,
   Eye,
   Layers,
+  MapPin,
   Orbit,
   Target,
   Zap,
@@ -520,6 +521,7 @@ export default function GridTwin3D({
   onSelectIncident,
 }: GridTwin3DProps) {
   const mountRef = useRef<HTMLDivElement | null>(null);
+  const selectedLocationLabelRef = useRef<HTMLDivElement | null>(null);
   const [contextLost, setContextLost] = useState(false);
   const [dockCollapsed, setDockCollapsed] = useState(false);
   const [preset, setPreset] = useState<CameraPreset>('overview');
@@ -1073,6 +1075,7 @@ export default function GridTwin3D({
     const raycaster = new THREE.Raycaster();
     raycaster.layers.set(1);
     const pointerNdc = new THREE.Vector2();
+    const labelWorldPosition = new THREE.Vector3();
     let lastMoveCheck = 0;
     let pointerDownPos = { x: 0, y: 0 };
 
@@ -1298,6 +1301,35 @@ export default function GridTwin3D({
       }
       packetInstanced.instanceMatrix.needsUpdate = true;
 
+      const locationLabel = selectedLocationLabelRef.current;
+      const selectedForLabel =
+        incidentsRef.current.find((i) => i.id === selectedIdRef.current) ??
+        incidentsRef.current[0];
+      if (locationLabel && selectedForLabel) {
+        const { x, z } = projectToGrid(selectedForLabel.lat, selectedForLabel.lng);
+        const height = THREE.MathUtils.clamp(
+          1.2 + selectedForLabel.score.totalScore / 34,
+          1.4,
+          4.4
+        );
+        labelWorldPosition
+          .set(x, height + 1.05 + incidentLayer.position.y, z)
+          .project(camera);
+        const visible =
+          labelWorldPosition.z >= -1 &&
+          labelWorldPosition.z <= 1 &&
+          labelWorldPosition.x >= -1 &&
+          labelWorldPosition.x <= 1 &&
+          labelWorldPosition.y >= -1 &&
+          labelWorldPosition.y <= 1;
+        const width = renderer.domElement.clientWidth;
+        const heightPx = renderer.domElement.clientHeight;
+        locationLabel.style.opacity = visible ? '1' : '0';
+        locationLabel.style.transform = `translate3d(${((labelWorldPosition.x + 1) * width) / 2}px, ${((-labelWorldPosition.y + 1) * heightPx) / 2}px, 0) translate(-50%, -100%)`;
+      } else if (locationLabel) {
+        locationLabel.style.opacity = '0';
+      }
+
       renderer.render(scene, camera);
 
       if (isSoftwareGl) {
@@ -1363,6 +1395,16 @@ export default function GridTwin3D({
     <div className="relative w-full h-[440px] sm:h-[520px] rounded-xl overflow-hidden border border-slate-800 bg-[#061021] select-none">
       {/* Isolated WebGL Mount Container (never shares React children with HUD) */}
       <div ref={mountRef} className="w-full h-full" />
+      {selectedAreaDisplay && (
+        <div
+          ref={selectedLocationLabelRef}
+          className="pointer-events-none absolute left-0 top-0 z-10 inline-flex items-center gap-1.5 rounded-md border border-amber-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900 shadow-lg transition-opacity"
+          style={{ opacity: 0 }}
+        >
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-red-600" aria-hidden="true" />
+          <span>{selectedAreaDisplay}</span>
+        </div>
+      )}
 
       {/* Top-Left Minimal Semantic Readout (solid rgba, zero backdrop-blur, zero pulsing dots) */}
       <div className="pointer-events-none absolute top-3 left-3 z-10 max-w-[85%] sm:max-w-md space-y-1.5">

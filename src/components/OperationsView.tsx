@@ -4,7 +4,6 @@ import {
   Box,
   CheckCircle2,
   ClipboardList,
-  CloudLightning,
   CopyPlus,
   Download,
   Layers,
@@ -56,7 +55,6 @@ interface OperationsViewProps {
   onEscalateIncident: (incidentId: string) => void;
   onSetFaultCause: (incidentId: string, cause: FaultCause) => void;
   onSimulateDuplicates: (feederId: string) => void;
-  onTriggerSurge: () => void;
   onResetDemo: () => void;
   onOpenCitizenPortal: () => void;
   smsAlerts: SmsAlert[];
@@ -85,7 +83,6 @@ export default function OperationsView({
   onEscalateIncident,
   onSetFaultCause,
   onSimulateDuplicates,
-  onTriggerSurge,
   onResetDemo,
   onOpenCitizenPortal,
   smsAlerts,
@@ -208,14 +205,6 @@ export default function OperationsView({
                 className="min-h-[42px] px-4 py-2 text-xs sm:text-sm font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 {t.logOutageCta}
-              </button>
-              <button
-                type="button"
-                onClick={onTriggerSurge}
-                className="min-h-[42px] inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium text-white border border-white/25 hover:bg-white/10 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-              >
-                <CloudLightning className="w-4 h-4 text-amber-400" aria-hidden="true" />
-                <span>{t.simulateSurge}</span>
               </button>
             </div>
           </div>
@@ -751,14 +740,14 @@ export default function OperationsView({
                   </div>
                 )}
 
-                {/* Merged Individual Reports Sample */}
+                {/* Merged Individual Reports */}
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between text-xs text-slate-500">
                     <span className="font-semibold text-slate-700">
                       {t.mergedComplaints} ({selectedIncident.reportCount})
                     </span>
                   </div>
-                  <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                  <div className="max-h-72 overflow-auto border border-slate-200 rounded-lg">
                     <table className="w-full text-left text-xs border-collapse min-w-[480px]">
                       <thead>
                         <tr className="bg-slate-50 text-slate-600 border-b border-slate-200">
@@ -769,7 +758,7 @@ export default function OperationsView({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {selectedIncident.reports.slice(0, 6).map((r) => (
+                        {selectedIncident.reports.map((r) => (
                           <tr key={r.id}>
                             <td className="py-2 px-3 font-mono text-slate-900">{r.rrNumber}</td>
                             <td className="py-2 px-3 text-slate-700">{r.channel}</td>

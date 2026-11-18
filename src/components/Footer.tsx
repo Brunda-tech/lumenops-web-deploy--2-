@@ -3,16 +3,28 @@ import type { Language, WorkspaceView } from '../types/lumenops';
 
 interface FooterProps {
   lang: Language;
+  isAdmin: boolean;
   onSelectView: (view: WorkspaceView) => void;
 }
 
-export default function Footer({ lang, onSelectView }: FooterProps) {
+export default function Footer({ lang, isAdmin, onSelectView }: FooterProps) {
   const t = TRANSLATIONS[lang].nav;
 
   const handleNav = (view: WorkspaceView) => {
     onSelectView(view);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const navItems: Array<{ id: WorkspaceView; label: string }> = [
+    { id: 'operations', label: t.operations },
+    { id: 'citizen', label: t.citizen },
+  ];
+  if (isAdmin) {
+    navItems.push(
+      { id: 'crews', label: t.crews },
+      { id: 'analytics', label: t.analytics }
+    );
+  }
 
   return (
     <footer className="bg-[#08152B] text-slate-300 border-t border-slate-800">
@@ -27,14 +39,7 @@ export default function Footer({ lang, onSelectView }: FooterProps) {
         </div>
 
         <nav aria-label="Footer navigation" className="flex flex-wrap items-center gap-5 text-xs">
-          {(
-            [
-              { id: 'operations', label: t.operations },
-              { id: 'citizen', label: t.citizen },
-              { id: 'crews', label: t.crews },
-              { id: 'analytics', label: t.analytics },
-            ] as const
-          ).map((item) => (
+          {navItems.map((item) => (
             <button
               key={item.id}
               type="button"

@@ -2,8 +2,10 @@ import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import {
   CalendarClock,
   CheckCircle2,
+  FileText,
   FileSpreadsheet,
   Lock,
+  MessageSquare,
   Search,
   Truck,
   Upload,
@@ -22,6 +24,8 @@ import type {
   FaultIncident,
   Language,
   MaintenanceWindow,
+  NewConnectionApplication,
+  OutageReport,
 } from '../types/lumenops';
 
 interface CrewsFeedersViewProps {
@@ -29,7 +33,10 @@ interface CrewsFeedersViewProps {
   adminUser: AdminUser | null;
   onRequireAdminLogin: () => void;
   incidents: FaultIncident[];
+  reports: OutageReport[];
+  connectionApplications: NewConnectionApplication[];
   onAssignCrew: (incidentId: string, crewId: string, eta: string) => void;
+  onAdvanceConnectionStatus: (applicationId: string) => void;
   onImportCsvText: (csvText: string) => void;
   onJumpToOperations: (incidentId: string) => void;
   maintenanceWindows: MaintenanceWindow[];
@@ -42,7 +49,10 @@ export default function CrewsFeedersView({
   adminUser,
   onRequireAdminLogin,
   incidents,
+  reports,
+  connectionApplications,
   onAssignCrew,
+  onAdvanceConnectionStatus,
   onImportCsvText,
   onJumpToOperations,
   maintenanceWindows,
@@ -63,8 +73,26 @@ export default function CrewsFeedersView({
 
   const t = TRANSLATIONS[lang].crews;
   const tGlobal = TRANSLATIONS[lang];
+  const tConnection = tGlobal.citizen.newConnection;
 
   const activeIncidents = incidents.filter((i) => i.status !== 'Restored');
+  const complaintRows = useMemo(() => {
+    const incidentsByReportId = new Map<string, FaultIncident>();
+    incidents.forEach((incident) => {
+      incident.reports.forEach((report) => incidentsByReportId.set(report.id, incident));
+    });
+    return [...reports]
+      .sort((a, b) => a.reportedAtMinutesAgo - b.reportedAtMinutesAgo)
+      .map((report) => ({ report, incident: incidentsByReportId.get(report.id) }));
+  }, [incidents, reports]);
+  const reportCountsByFeeder = useMemo(
+    () =>
+      reports.reduce<Record<string, number>>((counts, report) => {
+        counts[report.feederId] = (counts[report.feederId] ?? 0) + 1;
+        return counts;
+      }, {}),
+    [reports]
+  );
 
   const filteredFeeders = useMemo(() => {
     const q = locationSearch.trim().toLowerCase();
@@ -155,6 +183,193 @@ export default function CrewsFeedersView({
           </button>
         </div>
       )}
+
+      <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-[#08152B]" aria-hidden="true" />
+            <h2 className="font-display text-xl font-bold text-slate-900">
+              {t.complaintsTitle}
+            </h2>
+          </div>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 tabular-nums">
+            {complaintRows.length} {t.complaintCount}
+          </span>
+        </div>
+
+        {complaintRows.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
+            <p className="text-sm font-medium text-slate-700">{t.noComplaints}</p>
+          </div>
+        ) : (
+          <div className="max-h-[560px] overflow-y-auto space-y-3 pr-1">
+            {complaintRows.map(({ report, incident }) => {
+              const feederMeta = BESCOM_FEEDERS.find((f) => f.feederId === report.feederId);
+              const displayArea =
+                lang === 'kn' && feederMeta ? feederMeta.areaKn : report.area;
+              return (
+                <article
+                  key={report.id}
+                  className="rounded-lg border border-slate-200 bg-white p-4 space-y-3"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                        {t.complaintRef}
+                      </p>
+                      <p className="font-mono text-sm font-bold text-slate-900">
+                        {report.rrNumber}
+                      </p>
+                    </div>
+                    {incident && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                            incident.priority === 'HIGH'
+                              ? 'bg-red-100 text-red-800'
+                              : incident.priority === 'MEDIUM'
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-emerald-100 text-emerald-800'
+                          }`}
+                        >
+                          {tGlobal.priorityLabels[incident.priority]}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+                          {tGlobal.statusLabels[incident.status]}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                    <p className="text-slate-700">
+                      <span className="font-semibold">{t.complaintLocation}: </span>
+                      {displayArea} <span className="font-mono text-slate-500">({report.feederId})</span>
+                    </p>
+                    <p className="text-slate-700">
+                      <span className="font-semibold">{t.complaintDetails}: </span>
+                      {report.outageType}
+                    </p>
+                    <p className="text-slate-600">
+                      <span className="font-semibold">{t.complaintSource}: </span>
+                      {report.channel} · {report.reportedAtMinutesAgo} min ago
+                    </p>
+                    {incident && (
+                      <p className="text-slate-600">
+                        Incident {incident.label} · {incident.reportCount} {t.complaintCount}
+                      </p>
+                    )}
+                  </div>
+
+                  {report.description && (
+                    <p className="rounded-md bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-700">
+                      {report.description}
+                    </p>
+                  )}
+
+                  {incident && (
+                    <div className="flex justify-end border-t border-slate-100 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => onJumpToOperations(incident.id)}
+                        className="min-h-[34px] rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-[#08152B] hover:bg-slate-50 cursor-pointer"
+                      >
+                        {t.viewIncident}
+                      </button>
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-[#08152B]" aria-hidden="true" />
+            <h2 className="font-display text-xl font-bold text-slate-900">
+              {tConnection.trackerTitle}
+            </h2>
+          </div>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 tabular-nums">
+            {connectionApplications.length} {tConnection.applicationCount}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-h-[560px] overflow-y-auto pr-1">
+          {connectionApplications.map((application) => {
+            const feederMeta = BESCOM_FEEDERS.find(
+              (feeder) => feeder.feederId === application.feederId
+            );
+            const displayArea =
+              lang === 'kn' && feederMeta ? feederMeta.areaKn : application.area;
+            const statusColor =
+              application.status === 'Meter Sanctioned'
+                ? 'text-emerald-700 bg-emerald-50'
+                : application.status === 'Field Inspection'
+                  ? 'text-amber-700 bg-amber-50'
+                  : 'text-slate-700 bg-slate-100';
+
+            return (
+              <article
+                key={application.applicationId}
+                className="rounded-lg border border-slate-200 bg-white p-4 space-y-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-mono text-[11px] font-semibold text-slate-500">
+                      {application.applicationId}
+                    </p>
+                    <h3 className="mt-0.5 truncate font-display text-sm font-bold text-slate-900">
+                      {application.applicantName}
+                    </h3>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${statusColor}`}>
+                    {application.status}
+                  </span>
+                </div>
+
+                <div className="space-y-1 text-xs text-slate-600">
+                  <p>{displayArea} ({application.feederId}) · {application.pincode}</p>
+                  <p>{application.category} · {application.loadKw} kW · {application.phase}</p>
+                  <p>{application.phone} · {application.email}</p>
+                  <p className="font-mono text-slate-800">
+                    ₹{application.estimatedFee.toLocaleString('en-IN')} · {application.submittedAt}
+                  </p>
+                  {application.uploadedDocumentName && (
+                    <p className="truncate text-slate-500">
+                      {tConnection.proofUploadLabel}: {application.uploadedDocumentName}
+                    </p>
+                  )}
+                </div>
+
+                {application.status !== 'Meter Sanctioned' && (
+                  <div className="flex justify-end border-t border-slate-100 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!adminUser) {
+                          onRequireAdminLogin();
+                          return;
+                        }
+                        onAdvanceConnectionStatus(application.applicationId);
+                      }}
+                      className="min-h-[34px] inline-flex items-center gap-1.5 rounded-md bg-[#08152B] px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 cursor-pointer"
+                    >
+                      {!adminUser && (
+                        <Lock className="h-3 w-3 text-amber-400" aria-hidden="true" />
+                      )}
+                      {tConnection.advanceStatusBtn}
+                    </button>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </section>
 
       {/* Field Crew Roster */}
       <section className="space-y-4">
@@ -460,7 +675,7 @@ export default function CrewsFeedersView({
                 <th className="py-2.5 px-3">Circle</th>
                 <th className="py-2.5 px-3">Critical Asset</th>
                 <th className="py-2.5 px-3 text-right">Consumers</th>
-                <th className="py-2.5 px-3 text-right">30d Outages</th>
+                <th className="py-2.5 px-3 text-right">{t.feederComplaintCount}</th>
                 <th className="py-2.5 px-3">Live State</th>
               </tr>
             </thead>
@@ -501,7 +716,7 @@ export default function CrewsFeedersView({
                       {feeder.connectedConsumers.toLocaleString()}
                     </td>
                     <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-800">
-                      {feeder.outagesLast30Days}
+                      {reportCountsByFeeder[feeder.feederId] ?? 0}
                     </td>
                     <td className={`py-3 px-3 font-mono text-xs font-bold ${stateColor}`}>
                       {stateText}

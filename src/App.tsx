@@ -12,10 +12,8 @@ import { createInitialConnectionApps, SAMPLE_BILL_RECORDS } from './engine/billi
 import {
   BESCOM_CREWS,
   createSeedMaintenanceWindows,
-  createSeedReports,
   DEFAULT_WEIGHTS,
   generateDuplicateReportsForFeeder,
-  generateMonsoonSurgeBatch,
   type IncidentOverride,
   parseCsvReports,
   runDbscanAndScore,
@@ -53,33 +51,15 @@ export default function App() {
   const [adminUser, setAdminUser] = useState<AdminUser | null>(() => getSavedAdminSession());
   const [loginModalOpen, setLoginModalOpen] = useState(false);
 
-  const [reports, setReports] = useState<OutageReport[]>(() => createSeedReports());
+  const [reports, setReports] = useState<OutageReport[]>([]);
   const [weights, setWeights] = useState<PriorityWeights>(DEFAULT_WEIGHTS);
   const [statusOverrides, setStatusOverrides] = useState<Record<string, IncidentOverride>>({});
-  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>('INC-FDR-IND-04');
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [activeConsumerFeeder, setActiveConsumerFeeder] = useState<string | null>('FDR-IND-04');
 
-  const [smsAlerts, setSmsAlerts] = useState<SmsAlert[]>([
-    {
-      id: 'SMS-INIT-1',
-      timestamp: '09:14:22',
-      recipient: '+91 98450 11000',
-      incidentLabel: 'A',
-      feederId: 'FDR-IND-04',
-      message:
-        'Rapid Response #14 dispatched to Indiranagar 100ft Rd (FDR-IND-04). Est. restoration: 45 mins.',
-    },
-  ]);
+  const [smsAlerts, setSmsAlerts] = useState<SmsAlert[]>([]);
 
-  const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([
-    {
-      id: 'AUD-INIT-1',
-      timestamp: '09:14:22',
-      actor: 'System Auto-Prioritizer',
-      action: 'Auto-assigned Rapid Response #14 due to Manipal/CMH Hospital critical load.',
-      feederId: 'FDR-IND-04',
-    },
-  ]);
+  const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
 
   const [billsByRr, setBillsByRr] = useState<Record<string, BillRecord>>(() => {
     const initial: Record<string, BillRecord> = {};
@@ -148,6 +128,14 @@ export default function App() {
     }
     await logoutAdmin();
     setAdminUser(null);
+    setActiveView((current) =>
+      current === 'crews' || current === 'analytics' ? 'operations' : current
+    );
+  };
+
+  const handleSelectView = (view: WorkspaceView) => {
+    if (!adminUser && (view === 'crews' || view === 'analytics')) return;
+    setActiveView(view);
   };
 
   const handleSubmitConsumerReport = (payload: {
@@ -345,8 +333,8 @@ export default function App() {
       [inc.feederId]: {
         ...prev[inc.feederId],
         status: 'Restored',
-        assignedCrewId: inc.assignedCrewId ?? 'CREW-14',
-        assignedCrewName: inc.assignedCrewName ?? 'Rapid Response #14',
+        assignedCrewId: inc.assignedCrewId,
+        assignedCrewName: inc.assignedCrewName,
         estimatedRestoration: 'Supply restored',
       },
     }));
@@ -434,19 +422,6 @@ export default function App() {
     pushAudit(adminUser.name, 'MAINT', `Marked planned maintenance ${id} completed.`);
   };
 
-  const handleTriggerSurge = () => {
-    const surgeBatch = generateMonsoonSurgeBatch();
-    setReports((prev) => [...surgeBatch, ...prev]);
-    setSelectedIncidentId('INC-FDR-WFD-19');
-    pushSmsAlert(
-      'BESCOM Automated Feed',
-      'SURGE',
-      'FDR-WFD-19',
-      `Ingested ${surgeBatch.length} monsoon surge complaints across Whitefield, Jayanagar, Vijayanagar, and Devanahalli.`
-    );
-    pushAudit('System Simulator', 'MULTI', `Ingested ${surgeBatch.length} monsoon surge complaints.`);
-  };
-
   const handleImportCsvText = (csvText: string) => {
     const imported = parseCsvReports(csvText);
     if (imported.length === 0) return;
@@ -461,23 +436,14 @@ export default function App() {
   };
 
   const handleResetDemo = () => {
-    setReports(createSeedReports());
+    setReports([]);
     setWeights(DEFAULT_WEIGHTS);
     setStatusOverrides({});
-    setSelectedIncidentId('INC-FDR-IND-04');
-    setActiveConsumerFeeder('FDR-IND-04');
+    setSelectedIncidentId(null);
+    setActiveConsumerFeeder(null);
     setMaintenanceWindows(createSeedMaintenanceWindows());
-    setSmsAlerts([
-      {
-        id: `SMS-RESET-${Date.now()}`,
-        timestamp: formatClockNow(),
-        recipient: '+91 98450 11000',
-        incidentLabel: 'A',
-        feederId: 'FDR-IND-04',
-        message:
-          'Rapid Response #14 dispatched to Indiranagar 100ft Rd (FDR-IND-04). Est. restoration: 45 mins.',
-      },
-    ]);
+    setSmsAlerts([]);
+    setAuditLog([]);
   };
 
   return (
@@ -486,7 +452,8 @@ export default function App() {
         <Header
           activeView={activeView}
           lang={lang}
-          onSelectView={setActiveView}
+          isAdmin={Boolean(adminUser)}
+          onSelectView={handleSelectView}
         />
 
         <ControlStrip
@@ -520,9 +487,8 @@ export default function App() {
                   onEscalateIncident={handleEscalateIncident}
                   onSetFaultCause={handleSetFaultCause}
                   onSimulateDuplicates={handleSimulateDuplicates}
-                  onTriggerSurge={handleTriggerSurge}
                   onResetDemo={handleResetDemo}
-                  onOpenCitizenPortal={() => setActiveView('citizen')}
+                  onOpenCitizenPortal={() => handleSelectView('citizen')}
                   smsAlerts={smsAlerts}
                   auditLog={auditLog}
                 />
@@ -534,6 +500,7 @@ export default function App() {
                   adminUser={adminUser}
                   onRequireAdminLogin={() => setLoginModalOpen(true)}
                   incidents={incidents}
+                  reports={reports}
                   activeConsumerFeeder={activeConsumerFeeder}
                   onSubmitConsumerReport={handleSubmitConsumerReport}
                   onSimulateDuplicates={handleSimulateDuplicates}
@@ -553,7 +520,10 @@ export default function App() {
                   adminUser={adminUser}
                   onRequireAdminLogin={() => setLoginModalOpen(true)}
                   incidents={incidents}
+                  reports={reports}
+                  connectionApplications={connectionApps}
                   onAssignCrew={handleAssignCrew}
+                  onAdvanceConnectionStatus={handleAdvanceConnectionStatus}
                   onImportCsvText={handleImportCsvText}
                   onJumpToOperations={(id) => {
                     setSelectedIncidentId(id);
@@ -580,7 +550,11 @@ export default function App() {
           </AnimatePresence>
         </main>
 
-        <Footer lang={lang} onSelectView={setActiveView} />
+        <Footer
+          lang={lang}
+          isAdmin={Boolean(adminUser)}
+          onSelectView={handleSelectView}
+        />
 
         <AdminLoginModal
           isOpen={loginModalOpen}

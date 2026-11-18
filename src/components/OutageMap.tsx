@@ -48,7 +48,8 @@ export default function OutageMap({
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors',
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
 
     layerGroupRef.current = L.layerGroup().addTo(map);
@@ -78,6 +79,12 @@ export default function OutageMap({
           fillColor: '#94A3B8',
           fillOpacity: 0.75,
         })
+          .bindTooltip(displayArea, {
+            permanent: true,
+            direction: 'right',
+            className: 'map-location-label',
+            offset: [8, 0],
+          })
           .bindPopup(
             `<div style="font-family: DM Sans, Noto Sans Kannada, sans-serif; font-size: 12px;">
               <strong style="color:#0F172A;">${displayArea}</strong><br/>
@@ -186,6 +193,12 @@ export default function OutageMap({
 
       const marker = L.marker([inc.lat, inc.lng], { icon });
       marker.on('click', () => onSelectIncident(inc.id));
+      marker.bindTooltip(displayArea, {
+        permanent: true,
+        direction: 'right',
+        className: 'map-location-label',
+        offset: [12, 0],
+      });
       marker.bindPopup(`
         <div style="min-width: 210px; font-family: DM Sans, Noto Sans Kannada, sans-serif;">
           <div style="font-weight: 700; font-size: 14px; color: #0F172A;">

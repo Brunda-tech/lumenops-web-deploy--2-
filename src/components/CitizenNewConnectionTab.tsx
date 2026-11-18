@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { CheckCircle2, FilePlus2, Lock, Zap } from 'lucide-react';
 import { estimateNewConnectionFee } from '../engine/billing';
 import { ALL_CIRCLES, BESCOM_FEEDERS } from '../engine/dbscan';
@@ -41,6 +41,9 @@ export default function CitizenNewConnectionTab({
   const [loadKw, setLoadKw] = useState(3);
   const [phase, setPhase] = useState<'Single Phase' | 'Three Phase'>('Single Phase');
   const [proofDocument, setProofDocument] = useState('BBMP Khata & Sale Deed');
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofFileError, setProofFileError] = useState('');
+  const proofFileInputRef = useRef<HTMLInputElement | null>(null);
   const [submittedAppId, setSubmittedAppId] = useState<string | null>(null);
 
   const t = TRANSLATIONS[lang].citizen.newConnection;
@@ -77,12 +80,16 @@ export default function CitizenNewConnectionTab({
       loadKw,
       phase,
       proofDocument,
+      uploadedDocumentName: proofFile?.name,
       estimatedFee,
     });
     setSubmittedAppId(created.applicationId);
     setApplicantName('');
     setAddress('');
     setEmail('');
+    setProofFile(null);
+    setProofFileError('');
+    if (proofFileInputRef.current) proofFileInputRef.current.value = '';
   };
 
   return (
@@ -169,6 +176,49 @@ export default function CitizenNewConnectionTab({
               <option value="Building Plan Sanction">Building Plan Sanction</option>
               <option value="Commercial Trade License">Commercial Trade License</option>
             </select>
+          </div>
+          <div>
+            <label
+              htmlFor="nc-proof-file"
+              className="block text-xs font-semibold text-slate-700 mb-1.5"
+            >
+              {t.proofUploadLabel}
+            </label>
+            <input
+              id="nc-proof-file"
+              ref={proofFileInputRef}
+              type="file"
+              required
+              accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (
+                  file &&
+                  !(
+                    file.type === 'application/pdf' ||
+                    file.type === 'image/jpeg' ||
+                    /\.(pdf|jpe?g)$/i.test(file.name)
+                  )
+                ) {
+                  setProofFile(null);
+                  setProofFileError(t.proofUploadError);
+                  e.target.value = '';
+                  return;
+                }
+                setProofFile(file);
+                setProofFileError('');
+              }}
+              className="w-full min-h-[42px] px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-900 file:mr-2 file:px-2 file:py-1 file:border-0 file:rounded-md file:bg-slate-200 file:text-slate-700 file:font-semibold"
+              aria-describedby="nc-proof-file-hint"
+            />
+            <p id="nc-proof-file-hint" className="mt-1 text-[11px] text-slate-500">
+              {proofFile ? proofFile.name : t.proofUploadHint}
+            </p>
+            {proofFileError && (
+              <p role="alert" className="mt-1 text-xs text-red-700">
+                {proofFileError}
+              </p>
+            )}
           </div>
         </div>
 
@@ -399,6 +449,11 @@ export default function CitizenNewConnectionTab({
                   <p className="font-mono text-slate-800">
                     Fee: ₹{app.estimatedFee.toLocaleString('en-IN')} · {app.submittedAt}
                   </p>
+                  {app.uploadedDocumentName && (
+                    <p className="text-slate-500">
+                      {t.proofUploadLabel}: {app.uploadedDocumentName}
+                    </p>
+                  )}
                 </div>
 
                 {app.status !== 'Meter Sanctioned' && (

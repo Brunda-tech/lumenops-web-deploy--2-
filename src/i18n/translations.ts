@@ -20,7 +20,6 @@ export interface TranslationBundle {
     title: string;
     subtitle: string;
     logOutageCta: string;
-    simulateSurge: string;
     kpiActiveIncidents: string;
     kpiMergedFrom: string;
     kpiDedupReduction: string;
@@ -83,6 +82,11 @@ export interface TranslationBundle {
     landmarkLabel: string;
     submitBtn: string;
     trackerTitle: string;
+    complaintHistoryTitle: string;
+    complaintHistoryEmpty: string;
+    complaintStatus: string;
+    complaintStatusReported: string;
+    complaintIncident: string;
     lookupPlaceholder: string;
     estRestoration: string;
     smsTitle: string;
@@ -109,6 +113,26 @@ export interface TranslationBundle {
       txnId: string;
       downloadReceipt: string;
       notFoundError: string;
+      forecastTitle: string;
+      forecastSubtitle: string;
+      billHistoryLabels: string[];
+      generateForecast: string;
+      forecastNeedsHistory: string;
+      forecastAmount: string;
+      forecastDisclaimer: string;
+      applianceTitle: string;
+      applianceSubtitle: string;
+      refrigerator: string;
+      washingMachine: string;
+      powerRating: string;
+      hoursPerDay: string;
+      daysPerWeek: string;
+      monthlyUsage: string;
+      highUsageAlert: string;
+      highUsageThreshold: string;
+      refrigeratorTip: string;
+      washingMachineTip: string;
+      applianceDisclaimer: string;
     };
     newConnection: {
       title: string;
@@ -124,9 +148,13 @@ export interface TranslationBundle {
       loadKw: string;
       phase: string;
       proofDoc: string;
+      proofUploadLabel: string;
+      proofUploadHint: string;
+      proofUploadError: string;
       estFeeLabel: string;
       submitAppBtn: string;
       trackerTitle: string;
+      applicationCount: string;
       advanceStatusBtn: string;
       submittedSuccess: string;
     };
@@ -135,6 +163,15 @@ export interface TranslationBundle {
     kicker: string;
     title: string;
     subtitle: string;
+    complaintsTitle: string;
+    complaintCount: string;
+    feederComplaintCount: string;
+    noComplaints: string;
+    complaintRef: string;
+    complaintLocation: string;
+    complaintDetails: string;
+    complaintSource: string;
+    viewIncident: string;
     rosterTitle: string;
     feederDirTitle: string;
     csvTitle: string;
@@ -195,7 +232,6 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
       subtitle:
         'Complaints from Helpline 1912, mobile app, web portal, social media, and CSV feeds are clustered across all BESCOM locations and ranked by impact.',
       logOutageCta: 'Log Citizen Outage',
-      simulateSurge: 'Simulate Monsoon Surge (+18)',
       kpiActiveIncidents: 'Active Fault Incidents',
       kpiMergedFrom: 'Merged from raw reports',
       kpiDedupReduction: 'Duplicate Reduction',
@@ -212,7 +248,7 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
       crewAssigned: 'Crew Assigned',
       restored: 'Restored',
       exportCsv: 'Export CSV Queue',
-      reset: 'Reset',
+      reset: 'Clear Reports',
       mapTitle: 'Live Outage Spatial Command (All Locations)',
       mapSubtitle: 'Interactive 3D Digital Twin & OpenStreetMap · Tap any cluster to inspect or dispatch crew',
       mapMode3d: '3D Grid Twin',
@@ -259,6 +295,11 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
       landmarkLabel: 'Landmark or Observation',
       submitBtn: 'Submit Outage Report',
       trackerTitle: 'Live Restoration Tracker',
+      complaintHistoryTitle: 'Recent Outage Complaints',
+      complaintHistoryEmpty: 'No outage complaints have been submitted yet.',
+      complaintStatus: 'Status',
+      complaintStatusReported: 'Reported',
+      complaintIncident: 'Incident',
       lookupPlaceholder: 'Lookup RR # or Feeder ID...',
       estRestoration: 'Estimated Restoration',
       smsTitle: 'Your SMS & Push Alerts',
@@ -290,6 +331,33 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
         txnId: 'Transaction ID',
         downloadReceipt: 'Download Receipt (.TXT)',
         notFoundError: 'Enter a valid RR Number (at least 5 characters, e.g. BLR-E4-71904).',
+        forecastTitle: 'Next Month Bill Estimate',
+        forecastSubtitle: 'Enter all 6 previous monthly bill amounts, oldest to newest.',
+        billHistoryLabels: [
+          'Month 1 · Oldest',
+          'Month 2',
+          'Month 3',
+          'Month 4',
+          'Month 5',
+          'Month 6 · Latest',
+        ],
+        generateForecast: 'Generate estimate',
+        forecastNeedsHistory: 'Fill in all 6 monthly bill amounts to generate an estimate.',
+        forecastAmount: 'Estimated next bill',
+        forecastDisclaimer: 'Trend estimate only. Actual bills vary with usage, tariff changes, and billing days.',
+        applianceTitle: 'Home Appliance Energy Estimator',
+        applianceSubtitle: 'Estimate energy use from each appliance’s rated watts and your usage pattern.',
+        refrigerator: 'Refrigerator',
+        washingMachine: 'Washing machine',
+        powerRating: 'Rated power (W)',
+        hoursPerDay: 'Hours per day',
+        daysPerWeek: 'Days per week',
+        monthlyUsage: 'Estimated monthly use',
+        highUsageAlert: 'High estimated use. Review the appliance settings and usage pattern.',
+        highUsageThreshold: 'High-use alert threshold',
+        refrigeratorTip: 'Keep door seals clean, allow airflow around the fridge, and use the recommended temperature setting.',
+        washingMachineTip: 'Wash full loads, use eco or cold cycles when suitable, and avoid unnecessary repeat cycles.',
+        applianceDisclaimer: 'This is an estimate, not live device monitoring. Use the appliance label and typical use; smart-meter data is not connected.',
       },
       newConnection: {
         title: 'Apply for New Electricity Connection',
@@ -305,9 +373,13 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
         loadKw: 'Sanctioned Load (kW)',
         phase: 'Supply Phase',
         proofDoc: 'Ownership / ID Proof Type',
+        proofUploadLabel: 'Upload Supporting Document',
+        proofUploadHint: 'Accepted formats: PDF or JPEG',
+        proofUploadError: 'Please upload a PDF or JPEG document.',
         estFeeLabel: 'Estimated Registration & Meter Deposit',
         submitAppBtn: 'Submit New Connection Application',
         trackerTitle: 'New Connection Application Tracker',
+        applicationCount: 'applications',
         advanceStatusBtn: 'Advance Stage (Admin)',
         submittedSuccess: 'Application submitted successfully. Reference ID:',
       },
@@ -317,6 +389,15 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
       title: 'BESCOM Field Crews, Location Directory & CSV Ingestion',
       subtitle:
         'Only authenticated BESCOM Control Room Admins can dispatch or reassign field crews across the 24 monitored feeders.',
+      complaintsTitle: 'Current Complaint Reports',
+      complaintCount: 'reports',
+      feederComplaintCount: 'Complaints',
+      noComplaints: 'No complaints yet. New citizen reports will appear here.',
+      complaintRef: 'Complaint / RR Number',
+      complaintLocation: 'Location / Feeder',
+      complaintDetails: 'Issue details',
+      complaintSource: 'Source',
+      viewIncident: 'View incident',
       rosterTitle: 'Rapid Response Crew Roster',
       feederDirTitle: 'All BESCOM Locations & 11kV Feeders',
       csvTitle: 'Legacy Helpline & SCADA CSV Bridge',
@@ -330,15 +411,15 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
       inspect: 'Inspect',
     },
     analytics: {
-      kicker: 'DBSCAN Clustering Calibration & Repeat-Outage Hotspots',
+      kicker: 'DBSCAN Clustering Calibration & Complaint Counts',
       title: 'Intelligence Engine Tuning & Grid Reliability Analytics',
       subtitle:
-        'Calibrate spatial clustering radius and priority weights transparently, and spot repeat-outage hotspots across all BESCOM locations.',
+        'Calibrate spatial clustering radius and priority weights transparently, and review complaint volume across BESCOM locations.',
       tuningTitle: 'Scoring & DBSCAN Parameters',
       resetDefaults: 'Reset Defaults',
       breakdownTitle: 'Explainable Priority Breakdown',
       channelTitle: 'Multi-Channel Complaint Intake',
-      hotspotsTitle: '30-Day Repeat-Outage Feeder Hotspots',
+      hotspotsTitle: 'Current Complaints by Feeder',
     },
     auth: {
       modalTitle: 'BESCOM Control Room Admin Login',
@@ -391,7 +472,6 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
       subtitle:
         'ಸಹಾಯವಾಣಿ 1912, ಮೊಬೈಲ್ ಆ್ಯಪ್, ವೆಬ್ ಪೋರ್ಟಲ್ ಮತ್ತು ಸಾಮಾಜಿಕ ಜಾಲತಾಣಗಳ ದೂರುಗಳನ್ನು ಎಲ್ಲಾ ಬೆಸ್ಕಾಂ ಪ್ರದೇಶಗಳಲ್ಲಿ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ವಿಂಗಡಿಸಿ ಆದ್ಯತೆ ನೀಡಲಾಗುತ್ತದೆ.',
       logOutageCta: 'ವ್ಯತ್ಯಯ ದೂರು ದಾಖಲಿಸಿ',
-      simulateSurge: 'ಮಾನ್ಸೂನ್ ದೂರು ಪರೀಕ್ಷೆ (+18)',
       kpiActiveIncidents: 'ಸಕ್ರಿಯ ದೋಷ ಘಟನೆಗಳು',
       kpiMergedFrom: 'ಒಟ್ಟು ದೂರುಗಳಿಂದ ವಿಲೀನ',
       kpiDedupReduction: 'ನಕಲಿ ದೂರು ಕಡಿತ',
@@ -408,7 +488,7 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
       crewAssigned: 'ಸಿಬ್ಬಂದಿ ನಿಯೋಜಿಸಲಾಗಿದೆ',
       restored: 'ಪುನಃಸ್ಥಾಪಿಸಲಾಗಿದೆ',
       exportCsv: 'CSV ರಫ್ತು ಮಾಡಿ',
-      reset: 'ಮರುಹೊಂದಿಸಿ',
+      reset: 'ದೂರುಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ',
       mapTitle: 'ನೇರ ವಿದ್ಯುತ್ ವ್ಯತ್ಯಯ 3D ಮತ್ತು ನಕ್ಷೆ ಕೇಂದ್ರ',
       mapSubtitle: '3D ಡಿಜಿಟಲ್ ಟ್ವಿನ್ ಮತ್ತು OpenStreetMap · ಪರಿಶೀಲಿಸಲು ಕ್ಲಸ್ಟರ್ ಒತ್ತಿರಿ',
       mapMode3d: '3D ಗ್ರಿಡ್ ಟ್ವಿನ್',
@@ -455,6 +535,11 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
       landmarkLabel: 'ಹೆಗ್ಗುರುತು ಅಥವಾ ವಿವರಣೆ',
       submitBtn: 'ದೂರು ಸಲ್ಲಿಸಿ',
       trackerTitle: 'ನೇರ ಪುನಃಸ್ಥಾಪನೆ ಟ್ರ್ಯಾಕರ್',
+      complaintHistoryTitle: 'ಇತ್ತೀಚಿನ ವಿದ್ಯುತ್ ವ್ಯತ್ಯಯ ದೂರುಗಳು',
+      complaintHistoryEmpty: 'ಇನ್ನೂ ಯಾವುದೇ ವಿದ್ಯುತ್ ವ್ಯತ್ಯಯ ದೂರು ಸಲ್ಲಿಸಿಲ್ಲ.',
+      complaintStatus: 'ಸ್ಥಿತಿ',
+      complaintStatusReported: 'ವರದಿಯಾಗಿದೆ',
+      complaintIncident: 'ಘಟನೆ',
       lookupPlaceholder: 'RR ಸಂಖ್ಯೆ ಅಥವಾ ಫೀಡರ್ ಹುಡುಕಿ...',
       estRestoration: 'ಅಂದಾಜು ಪುನಃಸ್ಥಾಪನೆ',
       smsTitle: 'ನಿಮ್ಮ SMS ಎಚ್ಚರಿಕೆಗಳು',
@@ -486,6 +571,33 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
         txnId: 'ವಹಿವಾಟು ಸಂಖ್ಯೆ',
         downloadReceipt: 'ರಸೀದಿ ಡೌನ್‌ಲೋಡ್ (.TXT)',
         notFoundError: 'ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ RR ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ (ಕನಿಷ್ಠ 5 ಅಕ್ಷರಗಳು, ಉದಾ: BLR-E4-71904).',
+        forecastTitle: 'ಮುಂದಿನ ತಿಂಗಳ ಬಿಲ್ ಅಂದಾಜು',
+        forecastSubtitle: 'ಹಿಂದಿನ 6 ತಿಂಗಳ ಬಿಲ್ ಮೊತ್ತಗಳನ್ನು ಹಳೆಯದರಿಂದ ಹೊಸದಕ್ಕೆ ನಮೂದಿಸಿ.',
+        billHistoryLabels: [
+          'ತಿಂಗಳು 1 · ಹಳೆಯದು',
+          'ತಿಂಗಳು 2',
+          'ತಿಂಗಳು 3',
+          'ತಿಂಗಳು 4',
+          'ತಿಂಗಳು 5',
+          'ತಿಂಗಳು 6 · ಇತ್ತೀಚಿನದು',
+        ],
+        generateForecast: 'ಅಂದಾಜು ರಚಿಸಿ',
+        forecastNeedsHistory: 'ಅಂದಾಜು ರಚಿಸಲು ಹಿಂದಿನ 6 ತಿಂಗಳ ಎಲ್ಲಾ ಬಿಲ್ ಮೊತ್ತಗಳನ್ನು ನಮೂದಿಸಿ.',
+        forecastAmount: 'ಮುಂದಿನ ಬಿಲ್ ಅಂದಾಜು',
+        forecastDisclaimer: 'ಇದು ಪ್ರವೃತ್ತಿ ಆಧಾರಿತ ಅಂದಾಜು ಮಾತ್ರ. ಬಳಕೆ, ದರ ಬದಲಾವಣೆ ಮತ್ತು ಬಿಲ್ಲಿಂಗ್ ದಿನಗಳಿಂದ ನಿಜವಾದ ಬಿಲ್ ಬದಲಾಗಬಹುದು.',
+        applianceTitle: 'ಮನೆಯ ಉಪಕರಣಗಳ ವಿದ್ಯುತ್ ಅಂದಾಜು',
+        applianceSubtitle: 'ಉಪಕರಣದ ವಾಟೇಜ್ ಮತ್ತು ನಿಮ್ಮ ಬಳಕೆಯ ಆಧಾರದ ಮೇಲೆ ವಿದ್ಯುತ್ ಬಳಕೆಯನ್ನು ಅಂದಾಜಿಸಿ.',
+        refrigerator: 'ರೆಫ್ರಿಜರೇಟರ್',
+        washingMachine: 'ವಾಷಿಂಗ್ ಮಷೀನ್',
+        powerRating: 'ರೇಟೆಡ್ ಪವರ್ (W)',
+        hoursPerDay: 'ದಿನದ ಗಂಟೆಗಳು',
+        daysPerWeek: 'ವಾರದ ದಿನಗಳು',
+        monthlyUsage: 'ಅಂದಾಜು ಮಾಸಿಕ ಬಳಕೆ',
+        highUsageAlert: 'ಅಂದಾಜು ಬಳಕೆ ಹೆಚ್ಚು. ಉಪಕರಣದ ಸೆಟ್ಟಿಂಗ್‌ಗಳು ಮತ್ತು ಬಳಕೆಯ ವಿಧಾನ ಪರಿಶೀಲಿಸಿ.',
+        highUsageThreshold: 'ಹೆಚ್ಚಿನ ಬಳಕೆ ಎಚ್ಚರಿಕೆ ಮಿತಿ',
+        refrigeratorTip: 'ಬಾಗಿಲಿನ ಸೀಲ್ ಸ್ವಚ್ಛವಾಗಿಡಿ, ಗಾಳಿಯ ಹರಿವಿಗೆ ಜಾಗ ಬಿಡಿ ಮತ್ತು ಶಿಫಾರಸು ಮಾಡಿದ ತಾಪಮಾನ ಬಳಸಿ.',
+        washingMachineTip: 'ಪೂರ್ಣ ಲೋಡ್ ತೊಳೆಯಿರಿ, ಸಾಧ್ಯವಾದರೆ ಇಕೋ ಅಥವಾ ತಣ್ಣೀರು ಚಕ್ರ ಬಳಸಿ ಮತ್ತು ಅನಗತ್ಯ ಚಕ್ರಗಳನ್ನು ತಪ್ಪಿಸಿ.',
+        applianceDisclaimer: 'ಇದು ಅಂದಾಜು ಮಾತ್ರ; ನೈಜ-ಸಮಯದ ಮೇಲ್ವಿಚಾರಣೆ ಅಲ್ಲ. ಉಪಕರಣದ ಲೇಬಲ್ ಮತ್ತು ಸಾಮಾನ್ಯ ಬಳಕೆಯನ್ನು ಬಳಸಿ; ಸ್ಮಾರ್ಟ್ ಮೀಟರ್ ಸಂಪರ್ಕವಿಲ್ಲ.',
       },
       newConnection: {
         title: 'ಹೊಸ ವಿದ್ಯುತ್ ಸಂಪರ್ಕಕ್ಕೆ ಅರ್ಜಿ',
@@ -501,9 +613,13 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
         loadKw: 'ಅಗತ್ಯವಿರುವ ಲೋಡ್ (kW)',
         phase: 'ವಿದ್ಯುತ್ ಫೇಸ್',
         proofDoc: 'ಮಾಲೀಕತ್ವ / ಗುರುತಿನ ದಾಖಲೆ',
+        proofUploadLabel: 'ಪೂರಕ ದಾಖಲೆಯನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ',
+        proofUploadHint: 'ಅನುಮತಿಸಲಾದ ಸ್ವರೂಪಗಳು: PDF ಅಥವಾ JPEG',
+        proofUploadError: 'ದಯವಿಟ್ಟು PDF ಅಥವಾ JPEG ದಾಖಲೆಯನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.',
         estFeeLabel: 'ಅಂದಾಜು ನೋಂದಣಿ ಮತ್ತು ಮೀಟರ್ ಠೇವಣಿ',
         submitAppBtn: 'ಹೊಸ ಸಂಪರ್ಕ ಅರ್ಜಿ ಸಲ್ಲಿಸಿ',
         trackerTitle: 'ಹೊಸ ಸಂಪರ್ಕ ಅರ್ಜಿ ಸ್ಥಿತಿ ಟ್ರ್ಯಾಕರ್',
+        applicationCount: 'ಅರ್ಜಿಗಳು',
         advanceStatusBtn: 'ಹಂತ ಮುಂದುವರಿಸಿ (ಅಡ್ಮಿನ್)',
         submittedSuccess: 'ಅರ್ಜಿ ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಕೆಯಾಗಿದೆ. ಉಲ್ಲೇಖ ಸಂಖ್ಯೆ:',
       },
@@ -513,6 +629,15 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
       title: 'ಬೆಸ್ಕಾಂ ಕ್ಷೇತ್ರ ಸಿಬ್ಬಂದಿ, ಪ್ರದೇಶ ಪಟ್ಟಿ ಮತ್ತು CSV ಸೇರ್ಪಡೆ',
       subtitle:
         '24 ಫೀಡರ್‌ಗಳಾದ್ಯಂತ ಕ್ಷೇತ್ರ ಸಿಬ್ಬಂದಿಯನ್ನು ನಿಯೋಜಿಸಲು ಅಧಿಕೃತ ಬೆಸ್ಕಾಂ ಅಡ್ಮಿನ್ ಲಾಗಿನ್ ಅಗತ್ಯವಿದೆ.',
+      complaintsTitle: 'ಪ್ರಸ್ತುತ ದೂರು ವರದಿಗಳು',
+      complaintCount: 'ವರದಿಗಳು',
+      feederComplaintCount: 'ದೂರುಗಳು',
+      noComplaints: 'ಇನ್ನೂ ಯಾವುದೇ ದೂರುಗಳಿಲ್ಲ. ಹೊಸ ನಾಗರಿಕರ ವರದಿಗಳು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ.',
+      complaintRef: 'ದೂರು / RR ಸಂಖ್ಯೆ',
+      complaintLocation: 'ಪ್ರದೇಶ / ಫೀಡರ್',
+      complaintDetails: 'ಸಮಸ್ಯೆಯ ವಿವರ',
+      complaintSource: 'ಮೂಲ',
+      viewIncident: 'ಘಟನೆ ವೀಕ್ಷಿಸಿ',
       rosterTitle: 'ತ್ವರಿತ ಸ್ಪಂದನೆ ಸಿಬ್ಬಂದಿ ಪಟ್ಟಿ',
       feederDirTitle: 'ಎಲ್ಲಾ ಬೆಸ್ಕಾಂ ಪ್ರದೇಶಗಳು ಮತ್ತು 11kV ಫೀಡರ್‌ಗಳು',
       csvTitle: 'ಸಹಾಯವಾಣಿ ಮತ್ತು SCADA CSV ಸೇತುವೆ',
@@ -526,15 +651,15 @@ export const TRANSLATIONS: Record<Language, TranslationBundle> = {
       inspect: 'ಪರಿಶೀಲಿಸಿ',
     },
     analytics: {
-      kicker: 'DBSCAN ಮಾಪನಾಂಕ ನಿರ್ಣಯ ಮತ್ತು ಮರುಕಳಿಸುವ ದೋಷ ಪ್ರದೇಶಗಳು',
+      kicker: 'DBSCAN ಮಾಪನಾಂಕ ನಿರ್ಣಯ ಮತ್ತು ದೂರುಗಳ ಎಣಿಕೆ',
       title: 'ಬುದ್ಧಿವಂತ ಎಂಜಿನ್ ಮತ್ತು ಗ್ರಿಡ್ ವಿಶ್ವಾಸಾರ್ಹತೆ ವಿಶ್ಲೇಷಣೆ',
       subtitle:
-        'ಆದ್ಯತೆಯ ತೂಕಗಳು ಮತ್ತು DBSCAN ವ್ಯಾಪ್ತಿಯನ್ನು ಸರಿಹೊಂದಿಸಿ, ಪದೇ ಪದೇ ವ್ಯತ್ಯಯವಾಗುವ ಫೀಡರ್‌ಗಳನ್ನು ಗುರುತಿಸಿ.',
+        'ಆದ್ಯತೆಯ ತೂಕಗಳು ಮತ್ತು DBSCAN ವ್ಯಾಪ್ತಿಯನ್ನು ಸರಿಹೊಂದಿಸಿ, ಬೆಸ್ಕಾಂ ಪ್ರದೇಶಗಳ ದೂರುಗಳ ಸಂಖ್ಯೆಯನ್ನು ಪರಿಶೀಲಿಸಿ.',
       tuningTitle: 'ಅಂಕ ಮತ್ತು DBSCAN ನಿಯತಾಂಕಗಳು',
       resetDefaults: 'ಡೀಫಾಲ್ಟ್ ಮರುಹೊಂದಿಸಿ',
       breakdownTitle: 'ವಿವರಣಾತ್ಮಕ ಆದ್ಯತೆ ಪಟ್ಟಿ',
       channelTitle: 'ಬಹು-ಮಾಧ್ಯಮ ದೂರು ಹಂಚಿಕೆ',
-      hotspotsTitle: '30 ದಿನಗಳ ಮರುಕಳಿಸುವ ವ್ಯತ್ಯಯ ಫೀಡರ್‌ಗಳು',
+      hotspotsTitle: 'ಫೀಡರ್ ಪ್ರಕಾರ ಪ್ರಸ್ತುತ ದೂರುಗಳು',
     },
     auth: {
       modalTitle: 'ಬೆಸ್ಕಾಂ ನಿಯಂತ್ರಣ ಕೊಠಡಿ ಅಡ್ಮಿನ್ ಲಾಗಿನ್',

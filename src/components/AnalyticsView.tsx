@@ -44,10 +44,17 @@ export default function AnalyticsView({
     'CSV Import',
   ];
 
-  const sortedHotspots = [...BESCOM_FEEDERS]
-    .sort((a, b) => b.outagesLast30Days - a.outagesLast30Days)
+  const reportCountsByFeeder = reports.reduce<Record<string, number>>((counts, report) => {
+    counts[report.feederId] = (counts[report.feederId] ?? 0) + 1;
+    return counts;
+  }, {});
+  const sortedHotspots = BESCOM_FEEDERS.map((feeder) => ({
+    ...feeder,
+    complaintCount: reportCountsByFeeder[feeder.feederId] ?? 0,
+  }))
+    .sort((a, b) => b.complaintCount - a.complaintCount)
     .slice(0, 8);
-  const maxOutages = Math.max(...sortedHotspots.map((f) => f.outagesLast30Days), 1);
+  const maxComplaints = Math.max(...sortedHotspots.map((f) => f.complaintCount), 1);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
@@ -289,13 +296,13 @@ export default function AnalyticsView({
           <div>
             <h2 className="font-display text-lg font-bold text-slate-900">{t.hotspotsTitle}</h2>
             <p className="text-xs text-slate-500">
-              Top 8 repeat-outage 11kV feeders across all 24 monitored BESCOM locations
+              Complaint reports by feeder across all 24 monitored BESCOM locations
             </p>
           </div>
 
           <div className="space-y-3.5">
             {sortedHotspots.map((feeder) => {
-              const widthPct = Math.round((feeder.outagesLast30Days / maxOutages) * 100);
+              const widthPct = Math.round((feeder.complaintCount / maxComplaints) * 100);
               return (
                 <div key={feeder.feederId} className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs gap-2">
@@ -304,7 +311,7 @@ export default function AnalyticsView({
                       <span className="font-mono text-slate-500">({feeder.feederId})</span>
                     </span>
                     <span className="font-mono tabular-nums font-semibold text-amber-700 shrink-0">
-                      {feeder.outagesLast30Days} faults
+                      {feeder.complaintCount} reports
                     </span>
                   </div>
                   <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">

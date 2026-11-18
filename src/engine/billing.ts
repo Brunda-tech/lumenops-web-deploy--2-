@@ -106,6 +106,46 @@ export function lookupBillByRrNumber(
   };
 }
 
+export function predictNextBillAmount(monthlyBills: readonly (number | null)[]): number | null {
+  const observations = monthlyBills.flatMap((amount, monthIndex) =>
+    typeof amount === 'number' && Number.isFinite(amount) && amount >= 0
+      ? [{ x: monthIndex, y: amount }]
+      : []
+  );
+  if (observations.length < 3) return null;
+
+  const meanX = observations.reduce((sum, point) => sum + point.x, 0) / observations.length;
+  const meanY = observations.reduce((sum, point) => sum + point.y, 0) / observations.length;
+  const varianceX = observations.reduce((sum, point) => sum + (point.x - meanX) ** 2, 0);
+  if (varianceX === 0) return null;
+
+  const covariance = observations.reduce(
+    (sum, point) => sum + (point.x - meanX) * (point.y - meanY),
+    0
+  );
+  const monthlyTrend = covariance / varianceX;
+  const nextMonthIndex = observations[observations.length - 1].x + 1;
+  return Math.max(0, Math.round(meanY + monthlyTrend * (nextMonthIndex - meanX)));
+}
+
+export function estimateMonthlyApplianceKwh(
+  powerWatts: number,
+  hoursPerDay: number,
+  daysPerWeek: number
+): number {
+  if (
+    !Number.isFinite(powerWatts) ||
+    !Number.isFinite(hoursPerDay) ||
+    !Number.isFinite(daysPerWeek) ||
+    powerWatts < 0 ||
+    hoursPerDay < 0 ||
+    daysPerWeek < 0
+  ) {
+    return 0;
+  }
+  return Number(((powerWatts * hoursPerDay * daysPerWeek * 4.345) / 1000).toFixed(1));
+}
+
 export function estimateNewConnectionFee(
   category: ConnectionCategory,
   loadKw: number,

@@ -25,6 +25,7 @@ import type {
   Language,
   MaintenanceWindow,
   NewConnectionApplication,
+  OutageReport,
   OutageType,
   PaymentMethod,
   ReportChannel,
@@ -38,6 +39,7 @@ interface CitizenPortalViewProps {
   adminUser: AdminUser | null;
   onRequireAdminLogin: () => void;
   incidents: FaultIncident[];
+  reports: OutageReport[];
   activeConsumerFeeder: string | null;
   onSubmitConsumerReport: (payload: {
     area: string;
@@ -68,6 +70,7 @@ export default function CitizenPortalView({
   adminUser,
   onRequireAdminLogin,
   incidents,
+  reports,
   activeConsumerFeeder,
   onSubmitConsumerReport,
   onSimulateDuplicates,
@@ -203,6 +206,15 @@ export default function CitizenPortalView({
 
   const feederSmsAlerts = smsAlerts.filter(
     (s) => !trackedIncident || s.feederId === trackedIncident.feederId
+  );
+  const incidentByReportId = useMemo(
+    () =>
+      new Map(
+        incidents.flatMap((incident) =>
+          incident.reports.map((report) => [report.id, incident] as const)
+        )
+      ),
+    [incidents]
   );
 
   return (
@@ -649,6 +661,69 @@ export default function CitizenPortalView({
                 </>
               )}
             </div>
+
+            <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="font-display text-sm font-bold text-slate-900">
+                  {t.complaintHistoryTitle}
+                </h3>
+                <span className="text-xs tabular-nums text-slate-500">{reports.length}</span>
+              </div>
+              {reports.length === 0 ? (
+                <p className="rounded-lg bg-slate-50 p-4 text-xs text-slate-500">
+                  {t.complaintHistoryEmpty}
+                </p>
+              ) : (
+                <ul className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
+                  {reports.map((report) => {
+                    const linkedIncident = incidentByReportId.get(report.id);
+                    const feederMeta = BESCOM_FEEDERS.find(
+                      (feeder) => feeder.feederId === report.feederId
+                    );
+                    const area =
+                      lang === 'kn' && feederMeta ? feederMeta.areaKn : report.area;
+                    const status =
+                      linkedIncident?.status === 'Crew assigned'
+                        ? tGlobal.operations.crewAssigned
+                        : linkedIncident?.status === 'Restored'
+                          ? tGlobal.operations.restored
+                          : linkedIncident
+                            ? tGlobal.operations.awaitingDispatch
+                            : t.complaintStatusReported;
+
+                    return (
+                      <li
+                        key={report.id}
+                        className="rounded-lg border border-slate-200 bg-slate-50 p-3"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                          <div className="min-w-0 space-y-1">
+                            <p className="text-xs font-semibold text-slate-900">
+                              {report.rrNumber} · {report.outageType}
+                            </p>
+                            <p className="text-xs text-slate-600">
+                              {area} · {report.feederId}
+                            </p>
+                            <p className="break-words text-xs text-slate-500">
+                              {report.description}
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-xs sm:text-right">
+                            <p className="text-slate-500">{t.complaintStatus}</p>
+                            <p className="font-semibold text-slate-800">{status}</p>
+                            {linkedIncident && (
+                              <p className="mt-0.5 font-mono text-slate-500">
+                                {t.complaintIncident} {linkedIncident.label}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
 
             {/* Consumer SMS Updates */}
             <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">

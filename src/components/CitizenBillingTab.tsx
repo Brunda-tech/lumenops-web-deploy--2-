@@ -1,9 +1,30 @@
-import { useState, type FormEvent } from 'react';
-import { CheckCircle2, CreditCard, Download, Receipt, Search } from 'lucide-react';
-import { lookupBillByRrNumber, SAMPLE_BILL_RECORDS } from '../engine/billing';
+import { useEffect, useState, type FormEvent } from 'react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  CreditCard,
+  Download,
+  Receipt,
+  Search,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
+import {
+  estimateMonthlyApplianceKwh,
+  lookupBillByRrNumber,
+  predictNextBillAmount,
+  SAMPLE_BILL_RECORDS,
+} from '../engine/billing';
 import { BESCOM_FEEDERS } from '../engine/dbscan';
 import { TRANSLATIONS } from '../i18n/translations';
 import type { BillRecord, Language, PaymentMethod } from '../types/lumenops';
+
+type ApplianceKey = 'refrigerator' | 'washingMachine';
+type ApplianceUsage = {
+  powerWatts: string;
+  hoursPerDay: string;
+  daysPerWeek: string;
+};
 
 interface CitizenBillingTabProps {
   lang: Language;
@@ -22,8 +43,58 @@ export default function CitizenBillingTab({
   );
   const [method, setMethod] = useState<PaymentMethod>('UPI');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [billHistory, setBillHistory] = useState(['', '', '', '', '', '']);
+  const [nextBillEstimate, setNextBillEstimate] = useState<number | null>(null);
+  const [applianceUsage, setApplianceUsage] = useState<Record<ApplianceKey, ApplianceUsage>>({
+    refrigerator: { powerWatts: '150', hoursPerDay: '8', daysPerWeek: '7' },
+    washingMachine: { powerWatts: '500', hoursPerDay: '1', daysPerWeek: '3' },
+  });
 
   const t = TRANSLATIONS[lang].citizen.billing;
+
+  useEffect(() => {
+    setBillHistory(['', '', '', '', '', '']);
+    setNextBillEstimate(null);
+  }, [activeBill?.rrNumber]);
+
+  const hasCompleteBillHistory = billHistory.every(
+    (amount) => amount.trim() !== '' && Number.isFinite(Number(amount)) && Number(amount) >= 0
+  );
+
+  const handleGenerateForecast = () => {
+    if (!hasCompleteBillHistory) return;
+    setNextBillEstimate(predictNextBillAmount(billHistory.map((amount) => Number(amount))));
+  };
+
+  const applianceEstimates = {
+    refrigerator: {
+      kwh: estimateMonthlyApplianceKwh(
+        Number(applianceUsage.refrigerator.powerWatts),
+        Number(applianceUsage.refrigerator.hoursPerDay),
+        Number(applianceUsage.refrigerator.daysPerWeek)
+      ),
+      highUsageLimit: 60,
+    },
+    washingMachine: {
+      kwh: estimateMonthlyApplianceKwh(
+        Number(applianceUsage.washingMachine.powerWatts),
+        Number(applianceUsage.washingMachine.hoursPerDay),
+        Number(applianceUsage.washingMachine.daysPerWeek)
+      ),
+      highUsageLimit: 20,
+    },
+  };
+
+  const updateApplianceUsage = (
+    appliance: ApplianceKey,
+    field: keyof ApplianceUsage,
+    value: string
+  ) => {
+    setApplianceUsage((previous) => ({
+      ...previous,
+      [appliance]: { ...previous[appliance], [field]: value },
+    }));
+  };
 
   const handleFetchBill = (e?: FormEvent, overrideRr?: string) => {
     if (e) e.preventDefault();
@@ -87,7 +158,8 @@ export default function CitizenBillingTab({
     activeBill && lang === 'kn' && feederMeta ? feederMeta.areaKn : activeBill?.area;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       {/* Left: RR Number Lookup & Sample Accounts */}
       <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 space-y-5">
         <div className="space-y-1">
@@ -289,6 +361,157 @@ export default function CitizenBillingTab({
             )}
           </>
         )}
+      </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+        <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 space-y-5">
+          <div className="flex items-start gap-3">
+            <TrendingUp className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
+            <div className="space-y-1">
+              <h2 className="font-display text-lg font-bold text-slate-900">{t.forecastTitle}</h2>
+              <p className="text-xs sm:text-sm text-slate-600">{t.forecastSubtitle}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {t.billHistoryLabels.map((label, index) => (
+              <div key={label}>
+                <label
+                  htmlFor={`bill-history-${index}`}
+                  className="mb-1.5 block text-xs font-semibold text-slate-700"
+                >
+                  {label}
+                </label>
+                <div className="flex min-h-[40px] items-center rounded-lg border border-slate-200 bg-slate-50 px-3">
+                  <span className="mr-1 text-sm text-slate-500">₹</span>
+                  <input
+                    id={`bill-history-${index}`}
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="decimal"
+                    value={billHistory[index]}
+                    onChange={(e) => {
+                      setNextBillEstimate(null);
+                      setBillHistory((previous) =>
+                        previous.map((amount, amountIndex) =>
+                          amountIndex === index ? e.target.value : amount
+                        )
+                      );
+                    }}
+                    className="w-full bg-transparent py-2 text-sm font-mono text-slate-900 outline-none"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGenerateForecast}
+            disabled={!hasCompleteBillHistory}
+            className="min-h-[42px] rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors enabled:hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {t.generateForecast}
+          </button>
+
+          {nextBillEstimate === null ? (
+            <p role="status" className="rounded-lg bg-slate-50 px-4 py-3 text-xs text-slate-600">
+              {t.forecastNeedsHistory}
+            </p>
+          ) : (
+            <div className="rounded-xl bg-[#08152B] px-5 py-4 text-white">
+              <p className="text-xs text-slate-300">{t.forecastAmount}</p>
+              <p className="mt-1 font-display text-2xl font-bold tabular-nums text-amber-400">
+                ₹{nextBillEstimate.toLocaleString('en-IN')}
+              </p>
+            </div>
+          )}
+          <p className="text-[11px] leading-relaxed text-slate-500">{t.forecastDisclaimer}</p>
+        </section>
+
+        <section className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 space-y-5">
+          <div className="flex items-start gap-3">
+            <Zap className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
+            <div className="space-y-1">
+              <h2 className="font-display text-lg font-bold text-slate-900">{t.applianceTitle}</h2>
+              <p className="text-xs sm:text-sm text-slate-600">{t.applianceSubtitle}</p>
+            </div>
+          </div>
+
+          {(
+            [
+              ['refrigerator', t.refrigerator, t.refrigeratorTip],
+              ['washingMachine', t.washingMachine, t.washingMachineTip],
+            ] as const
+          ).map(([appliance, label, tip]) => {
+            const usage = applianceUsage[appliance];
+            const estimate = applianceEstimates[appliance];
+            const isHighUsage = estimate.kwh > estimate.highUsageLimit;
+            const fields: Array<{ key: keyof ApplianceUsage; label: string }> = [
+              { key: 'powerWatts', label: t.powerRating },
+              { key: 'hoursPerDay', label: t.hoursPerDay },
+              { key: 'daysPerWeek', label: t.daysPerWeek },
+            ];
+
+            return (
+              <div
+                key={appliance}
+                className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="font-display text-sm font-bold text-slate-900">{label}</h3>
+                  <p className="text-right text-xs font-semibold text-slate-700">
+                    {t.monthlyUsage}: {estimate.kwh} kWh
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {fields.map((field) => (
+                    <div key={field.key}>
+                      <label
+                        htmlFor={`${appliance}-${field.key}`}
+                        className="mb-1 block text-[11px] font-medium text-slate-600"
+                      >
+                        {field.label}
+                      </label>
+                      <input
+                        id={`${appliance}-${field.key}`}
+                        type="number"
+                        min="0"
+                        max={
+                          field.key === 'hoursPerDay'
+                            ? 24
+                            : field.key === 'daysPerWeek'
+                              ? 7
+                              : undefined
+                        }
+                        step="0.1"
+                        value={usage[field.key]}
+                        onChange={(e) =>
+                          updateApplianceUsage(appliance, field.key, e.target.value)
+                        }
+                        className="min-h-[38px] w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm font-mono text-slate-900"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {isHighUsage && (
+                  <p role="status" className="flex items-start gap-2 text-xs font-medium text-amber-800">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>
+                      {t.highUsageAlert} {t.highUsageThreshold}: {estimate.highUsageLimit} kWh/month.
+                    </span>
+                  </p>
+                )}
+                <p className="text-xs leading-relaxed text-slate-600">{tip}</p>
+              </div>
+            );
+          })}
+
+          <p className="text-[11px] leading-relaxed text-slate-500">{t.applianceDisclaimer}</p>
+        </section>
       </div>
     </div>
   );
